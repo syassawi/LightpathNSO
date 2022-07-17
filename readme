@@ -1,0 +1,150 @@
+Installation of NSO
+
+Cisco NSO can run on macOS or on Linux systems. If you are a Window's user (or if you don't wish to install it natively on your laptop), you can install NSO on a Linux virtual machine or in a container.
+
+Prereqs:
+
+Java
+NSO requires Java to be installed to function. Here are some common ways to install Java:
+
+macOS
+Homebrew - brew cask install java
+Java.com
+Linux
+With apt - apt install default-jdk
+With yum - yum install java-1.8.0-openjdk
+
+Apache Ant
+Apache Ant is a Java library and tool for building files and other dependencies that you will also need.
+
+macOS
+Homebrew - brew install ant
+Linux
+With apt - apt install ant
+With yum - yum install ant
+
+Development tools
+You may need to install a few additional tools for development. In particular xml processing tools are helpful:
+
+macOS
+Homebrew - brew install libxml2
+Linux
+With apt - apt install libxml2-utils
+With yum - yum install libxml2
+
+Local vs System Installation
+Before you install NSO onto your system, you need to decide whether to do a "System" or "Local" installation. Here's a simple breakdown of the two.
+
+System Install is used when installing NSO for a centralized, "always-on", production grade purpose. It is configured as a system daemon that would start and end with the underlying operating system. The default users of admin and oper are not included and the file structure is more distributed.
+Local Install is used for development, lab, and evaluation purposes. It unpacks all the application components, including docs and examples, and can be used by the engineer to run multiple, unrelated, instances of NSO for different labs and demos on a single workstation .
+
+We will be preforming a Local Instalation for the POC purpose.
+
+Performing a Local Installation
+Once you've installed the pre-reqs and downloaded the NSO installation file for your operating system, you are ready to do your installation.
+
+1. Open up a terminal and navigate to the directory where you downloaded the installer.
+Make sure you have the correct installer binary for your OS, darwin is for macOS and linux is for everything else.
+
+BASH
+Copycd ~/Downloads
+ls -l nso*.bin
+-rw-r--r--@ 1 user  staff   199M Dec 15 11:45 nso-5.3.darwin.x86_64.installer.bin
+-rw-r--r--@ 1 user  staff   199M Dec 15 11:45 nso-5.3.darwin.x86_64.signed.bin
+If your file is a signed.bin file, this means that the file you downloaded has been digitally signed by Cisco, and when you execute it you'll verify the signature and unpack the installer.bin. If you have the installer.bin skip down past the signed steps.
+
+2. Use the sh command to "run" the signed.bin to verify the certificate and extract the installer binary and other files.
+
+BASH
+Copy sh nso-5.3.darwin.x86_64.signed.bin 
+
+ # Output
+ Unpacking...
+ Verifying signature...
+ Downloading CA certificate from http://www.cisco.com/security/pki/certs/crcam2.cer ...
+ Successfully downloaded and verified crcam2.cer.
+ Downloading SubCA certificate from http://www.cisco.com/security/pki/certs/innerspace.cer ...
+ Successfully downloaded and verified innerspace.cer.
+ Successfully verified root, subca and end-entity certificate chain.
+ Successfully fetched a public key from tailf.cer.
+ Successfully verified the signature of nso-5.3.darwin.x86_64.installer.bin using tailf.cer
+
+3. If it all comes back green, you're in good shape and ready to install. Here is what was unpacked.
+
+BASH
+Copy ls -l
+
+ # Output
+ -rw-r--r--  1 user  staff   1.8K Nov 29 06:05 README.signature
+ -rw-r--r--  1 user  staff    12K Nov 29 06:05 cisco_x509_verify_release.py
+ -rwxr-xr-x  1 user  staff   199M Nov 29 05:55 nso-5.3.darwin.x86_64.installer.bin
+ -rw-r--r--  1 user  staff   256B Nov 29 06:05 nso-5.3.darwin.x86_64.installer.bin.signature
+ -rwxr-xr-x@ 1 user  staff   199M Dec 15 11:45 nso-5.3.darwin.x86_64.signed.bin
+ -rw-r--r--  1 user  staff   1.4K Nov 29 06:05 tailf.cer
+The NSO installer nso-VERSION.OS.ARCH.installer.bin
+Signature generated for the NSO image nso-VERSION.OS.ARCH.installer.bin.signature
+An enclosed Cisco signed tailf.cer x.509 end-entity certificate containing the public key that is used to verify the signature.
+README.signature file which briefs you more details on the unpacked content and the steps on "How to run the signature verification program". If you would like to manually verify the signature, please refer to the steps in this file.
+cisco_x509_verify_release.py python program that can be used to verify the 3-tier x.509 certificate chain and signature.
+
+4. First, checkout the --help on the installer binary using the sh nso-5.3.darwin.x86_64.installer.bin --help command. Notice the two options for --local-install or --system-install
+
+BASH
+Copy sh nso-5.3.darwin.x86_64.installer.bin --help
+
+ # Output
+ This is the NCS installation script.
+
+ Usage: ./nso-5.3.darwin.x86_64.installer.bin [--local-install] LocalInstallDir
+
+ Installs NCS in the LocalInstallDir directory only.
+ This is convenient for test and development purposes.
+
+ Usage: ./nso-5.3.darwin.x86_64.installer.bin --system-install [--install-dir InstallDir]
+     [--config-dir ConfigDir] [--run-dir RunDir] [--log-dir LogDir]
+     [--run-as-user User] [--keep-ncs-setup] [--non-interactive]
+
+ Does a system install of NCS, suitable for deployment.
+ Static files are installed in InstallDir/ncs-<vsn>.
+ The first time --system-install is used, the ConfigDir,
+ RunDir, and LogDir directories are also created and
+ populated for config files, run-time state files, and log files,
+ respectively, and an init script for start of NCS at system boot
+ and user profile scripts are installed. Defaults are:
+
+ InstallDir - /opt/ncs
+ ConfigDir  - /etc/ncs
+ RunDir     - /var/opt/ncs
+ LogDir     - /var/log/ncs
+
+ By default, the system install will run NCS as the root user.
+ If the --run-as-user option is given, the system install will
+ instead run NCS as the given user. The user will be created if
+ it does not already exist.
+
+ If the --non-interactive option is given, the installer will
+ proceed with potentially disruptive changes (e.g. modifying or
+ removing existing files) without asking for confirmation.
+ 
+5.For the installation directory or LocalInstallDir, the recommendation is to install it into your $HOME directory into a folder called ~/nso-VERSION. So if our version is 5.3, our directory will be ~/nso-5.3.
+
+6. Run the installer with the argument --local-install ~/nso-5.3 to install it into your home directory
+
+BASH
+Copy sh nso-5.3.darwin.x86_64.installer.bin --local-install ~/nso-5.3
+
+ # Output
+ INFO  Using temporary directory /var/folders/90/n5sbctr922336_0jrzhb54400000gn/T//ncs_installer.93831 to stage NCS installation bundle
+ INFO  Unpacked ncs-5.3 in /Users/user/nso-5.3
+ INFO  Found and unpacked corresponding DOCUMENTATION_PACKAGE
+ INFO  Found and unpacked corresponding EXAMPLE_PACKAGE
+ INFO  Found and unpacked corresponding JAVA_PACKAGE
+ INFO  Generating default SSH hostkey (this may take some time)
+ INFO  SSH hostkey generated
+ INFO  Environment set-up generated in /Users/user/nso-5.3/ncsrc
+ INFO  NSO installation script finished
+ INFO  Found and unpacked corresponding NETSIM_PACKAGE
+ INFO  NCS installation complete
+
+7. That's it, you're installed.
+
